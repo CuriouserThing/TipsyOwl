@@ -7,7 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Bjerg" Version="0.1.0" />
+    <ProjectReference Include="../../Bjerg/Bjerg/Bjerg.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Discord.Net" Version="2.2.0" />
   </ItemGroup>
 
 </Project>
