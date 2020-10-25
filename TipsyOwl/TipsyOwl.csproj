@@ -1,17 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <Authors>Axolotl Maid Service</Authors>
     <Version>0.1.0</Version>
   </PropertyGroup>
-
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../../Bjerg/Bjerg/Bjerg.csproj" />
+    <ProjectReference Include="../../Bjerg/Bjerg/Bjerg.csproj"/>
   </ItemGroup>
-
   <ItemGroup>
-    <PackageReference Include="Discord.Net" Version="2.2.0" />
+    <PackageReference Include="Discord.Net" Version="2.2.0"/>
+    <PackageReference Include="Microsoft.Extensions.Options" Version="3.1.9"/>
   </ItemGroup>
-
 </Project>
