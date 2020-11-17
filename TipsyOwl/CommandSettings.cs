@@ -1,6 +1,6 @@
 namespace TipsyOwl
 {
-    public class CommandHandlingInfo
+    public class CommandSettings
     {
         public string? CommandPrefix { get; init; }
         public bool AllowInlineCommands { get; init; }
