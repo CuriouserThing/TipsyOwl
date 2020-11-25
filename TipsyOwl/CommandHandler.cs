@@ -93,7 +93,7 @@ namespace TipsyOwl
             }
         }
 
-        private async Task HandleInlineCommandsAsync(string text, SocketCommandContext context, CommandSettings settings)
+        private async Task HandleInlineCommandsAsync(string text, ICommandContext context, CommandSettings settings)
         {
             if (!settings.AllowInlineCommands)
             {
