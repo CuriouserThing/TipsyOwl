@@ -23,9 +23,7 @@ namespace TipsyOwl
             MatchSelector = matchSelector;
         }
 
-        public float AbsoluteMatchThreshold { get; set; } = 0.5f;
-
-        public float RelativeMatchThreshold { get; set; } = 0.25f;
+        public float MatchThreshold { get; set; } = 0.5f;
 
         public CardSearchResult SearchByName(string lookup)
         {
@@ -40,7 +38,7 @@ namespace TipsyOwl
             {
                 string name = cardGroup.Key.ToLower(cultureInfo);
                 float m = matcher.GetMatchPct(name);
-                if (m > AbsoluteMatchThreshold)
+                if (m > MatchThreshold)
                 {
                     cards.Add((m, cardGroup));
                 }
@@ -66,10 +64,8 @@ namespace TipsyOwl
             }
             else
             {
-                float mTop = cards[0].Item1;
                 ICard[] weakerMatches = cards
                     .Skip(1)
-                    .Where(cs => cs.Item1 > mTop - RelativeMatchThreshold)
                     .Select(cs => MatchSelector.Reduce(cs.Item2))
                     .ToArray();
                 return CardSearchResult.FromSuccessfulSearch(match, expandedMatch, weakerMatches);
