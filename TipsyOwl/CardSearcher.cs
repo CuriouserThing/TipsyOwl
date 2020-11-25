@@ -11,11 +11,11 @@ namespace TipsyOwl
 
         private Catalog HomeCatalog { get; }
 
-        private IStringMatcher StringMatcher { get; }
+        private StringMatcher StringMatcher { get; }
 
         private ICardMatchSelector MatchSelector { get; }
 
-        public CardSearcher(Catalog localCatalog, Catalog homeCatalog, IStringMatcher stringMatcher, ICardMatchSelector matchSelector)
+        public CardSearcher(Catalog localCatalog, Catalog homeCatalog, StringMatcher stringMatcher, ICardMatchSelector matchSelector)
         {
             LocalCatalog = localCatalog;
             HomeCatalog = homeCatalog;
@@ -31,6 +31,7 @@ namespace TipsyOwl
         {
             CultureInfo cultureInfo = LocalCatalog.Locale.CultureInfo;
             lookup = lookup.ToLower(cultureInfo);
+            ISourceStringMatcher matcher = StringMatcher.GetSourceStringMatcher(lookup);
             var cards = new List<(float, IEnumerable<ICard>)>();
 
             foreach (IGrouping<string, ICard> cardGroup in LocalCatalog.Cards.Values
@@ -38,7 +39,7 @@ namespace TipsyOwl
                 .GroupBy(c => c.Name!))
             {
                 string name = cardGroup.Key.ToLower(cultureInfo);
-                float m = StringMatcher.GetMatchPct(lookup, name);
+                float m = matcher.GetMatchPct(name);
                 if (m > AbsoluteMatchThreshold)
                 {
                     cards.Add((m, cardGroup));
