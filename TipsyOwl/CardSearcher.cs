@@ -7,11 +7,11 @@ namespace TipsyOwl
 {
     public class CardSearcher
     {
-        public CardSearcher(Catalog localCatalog, Catalog homeCatalog, StringMatcher stringMatcher, ICardMatchSelector matchSelector)
+        public CardSearcher(Catalog localCatalog, Catalog homeCatalog, StringMatcherFactory stringMatcherFactory, ICardMatchSelector matchSelector)
         {
             LocalCatalog = localCatalog;
             HomeCatalog = homeCatalog;
-            StringMatcher = stringMatcher;
+            StringMatcherFactory = stringMatcherFactory;
             MatchSelector = matchSelector;
         }
 
@@ -19,7 +19,7 @@ namespace TipsyOwl
 
         private Catalog HomeCatalog { get; }
 
-        private StringMatcher StringMatcher { get; }
+        private StringMatcherFactory StringMatcherFactory { get; }
 
         private ICardMatchSelector MatchSelector { get; }
 
@@ -29,7 +29,7 @@ namespace TipsyOwl
         {
             CultureInfo cultureInfo = LocalCatalog.Locale.CultureInfo;
             lookup = lookup.ToLower(cultureInfo);
-            ISourceStringMatcher matcher = StringMatcher.GetSourceStringMatcher(lookup);
+            IStringMatcher matcher = StringMatcherFactory.CreateStringMatcher(lookup);
             var cards = new List<(float, IEnumerable<ICard>)>();
 
             foreach (IGrouping<string, ICard> cardGroup in LocalCatalog.Cards.Values

@@ -3,7 +3,7 @@
     /// <summary>
     /// Interface for fuzzy-matching a single source string to any target string.
     /// </summary>
-    public interface ISourceStringMatcher
+    public interface IStringMatcher
     {
         /// <summary>
         /// Fuzzy-match the source string to a target string. Not guaranteed to be thread-safe.

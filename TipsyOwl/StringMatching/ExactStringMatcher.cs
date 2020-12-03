@@ -1,6 +1,6 @@
 ﻿namespace TipsyOwl.StringMatching
 {
-    public class ExactStringMatcher : ISourceStringMatcher
+    public class ExactStringMatcher : IStringMatcher
     {
         public string Source { get; }
 

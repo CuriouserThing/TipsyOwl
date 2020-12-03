@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace TipsyOwl.StringMatching
 {
-    public class LevenshteinSubstringMatcher : ISourceStringMatcher
+    public class LevenshteinSubstringMatcher : IStringMatcher
     {
         public LevenshteinSubstringMatcher(string source, float bookend, float bookendTaper)
         {
