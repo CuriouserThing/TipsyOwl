@@ -7,12 +7,13 @@ namespace TipsyOwl
 {
     public class CardSearcher
     {
-        public CardSearcher(Catalog localCatalog, Catalog homeCatalog, StringMatcherFactory stringMatcherFactory, ICardMatchSelector matchSelector)
+        public CardSearcher(Catalog localCatalog, Catalog homeCatalog, StringMatcherFactory stringMatcherFactory, ICardMatchSelector matchSelector, ICardWeighter cardWeighter)
         {
             LocalCatalog = localCatalog;
             HomeCatalog = homeCatalog;
             StringMatcherFactory = stringMatcherFactory;
             MatchSelector = matchSelector;
+            CardWeighter = cardWeighter;
         }
 
         private Catalog LocalCatalog { get; }
@@ -23,6 +24,8 @@ namespace TipsyOwl
 
         private ICardMatchSelector MatchSelector { get; }
 
+        private ICardWeighter CardWeighter { get; }
+
         public float MatchThreshold { get; set; } = 0.5f;
 
         public SearchResult<ICard> SearchByName(string lookup)
@@ -30,7 +33,7 @@ namespace TipsyOwl
             CultureInfo cultureInfo = LocalCatalog.Locale.CultureInfo;
             lookup = lookup.ToLower(cultureInfo);
             IStringMatcher matcher = StringMatcherFactory.CreateStringMatcher(lookup);
-            var cards = new List<(float, IEnumerable<ICard>)>();
+            var cardNameMatches = new List<(float, IEnumerable<ICard>)>();
 
             foreach (IGrouping<string, ICard> cardGroup in LocalCatalog.Cards.Values
                 .Where(c => c.Name != null)
@@ -40,54 +43,47 @@ namespace TipsyOwl
                 float m = matcher.GetMatchPct(name);
                 if (m > MatchThreshold)
                 {
-                    cards.Add((m, cardGroup));
+                    cardNameMatches.Add((m, cardGroup));
                 }
             }
 
-            if (cards.Count == 0)
+            if (cardNameMatches.Count == 0)
             {
                 return SearchResult<ICard>.FromFailedSearch();
             }
 
-            cards.Sort(CompareCandidatesDescending);
+            (float, ICard)[] cardMatches = cardNameMatches
+                .Select(ReduceAndWeight)
+                .OrderByDescending(mc => mc.Item1)
+                .ToArray();
 
-            ICard match = MatchSelector.Reduce(cards[0].Item2);
+            ICard match = cardMatches[0].Item2;
             IReadOnlyList<ICard> expandedMatch = MatchSelector.Expand(match, LocalCatalog, HomeCatalog);
             if (expandedMatch.Count < 2)
             {
                 expandedMatch = new[] {match};
             }
 
-            if (cards.Count == 1)
+            if (cardMatches.Length == 1)
             {
                 return SearchResult<ICard>.FromSuccessfulSearch(match, expandedMatch);
             }
             else
             {
-                ICard[] weakerMatches = cards
+                ICard[] weakerMatches = cardMatches
                     .Skip(1)
-                    .Select(cs => MatchSelector.Reduce(cs.Item2))
+                    .Select(mc => mc.Item2)
                     .ToArray();
                 return SearchResult<ICard>.FromSuccessfulSearch(match, expandedMatch, weakerMatches);
             }
         }
 
-        private static int CompareCandidatesDescending((float, IEnumerable<ICard>) x, (float, IEnumerable<ICard>) y)
+        private (float, ICard) ReduceAndWeight((float, IEnumerable<ICard>) cardNameMatches)
         {
-            (float mx, _) = x;
-            (float my, _) = y;
-            if (mx < my)
-            {
-                return +1;
-            }
-            else if (mx > my)
-            {
-                return -1;
-            }
-            else
-            {
-                return 0;
-            }
+            (float m, IEnumerable<ICard> cards) = cardNameMatches;
+            ICard card = MatchSelector.Reduce(cards);
+            m *= CardWeighter.GetWeightingFactor(card);
+            return (m, card);
         }
     }
 }
