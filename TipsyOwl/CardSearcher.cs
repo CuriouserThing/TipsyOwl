@@ -1,20 +1,12 @@
-﻿using Bjerg;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using Bjerg;
 
 namespace TipsyOwl
 {
     public class CardSearcher
     {
-        private Catalog LocalCatalog { get; }
-
-        private Catalog HomeCatalog { get; }
-
-        private StringMatcher StringMatcher { get; }
-
-        private ICardMatchSelector MatchSelector { get; }
-
         public CardSearcher(Catalog localCatalog, Catalog homeCatalog, StringMatcher stringMatcher, ICardMatchSelector matchSelector)
         {
             LocalCatalog = localCatalog;
@@ -23,9 +15,17 @@ namespace TipsyOwl
             MatchSelector = matchSelector;
         }
 
+        private Catalog LocalCatalog { get; }
+
+        private Catalog HomeCatalog { get; }
+
+        private StringMatcher StringMatcher { get; }
+
+        private ICardMatchSelector MatchSelector { get; }
+
         public float MatchThreshold { get; set; } = 0.5f;
 
-        public CardSearchResult SearchByName(string lookup)
+        public SearchResult<ICard> SearchByName(string lookup)
         {
             CultureInfo cultureInfo = LocalCatalog.Locale.CultureInfo;
             lookup = lookup.ToLower(cultureInfo);
@@ -46,7 +46,7 @@ namespace TipsyOwl
 
             if (cards.Count == 0)
             {
-                return CardSearchResult.FromFailedSearch();
+                return SearchResult<ICard>.FromFailedSearch();
             }
 
             cards.Sort(CompareCandidatesDescending);
@@ -60,7 +60,7 @@ namespace TipsyOwl
 
             if (cards.Count == 1)
             {
-                return CardSearchResult.FromSuccessfulSearch(match, expandedMatch);
+                return SearchResult<ICard>.FromSuccessfulSearch(match, expandedMatch);
             }
             else
             {
@@ -68,7 +68,7 @@ namespace TipsyOwl
                     .Skip(1)
                     .Select(cs => MatchSelector.Reduce(cs.Item2))
                     .ToArray();
-                return CardSearchResult.FromSuccessfulSearch(match, expandedMatch, weakerMatches);
+                return SearchResult<ICard>.FromSuccessfulSearch(match, expandedMatch, weakerMatches);
             }
         }
 
