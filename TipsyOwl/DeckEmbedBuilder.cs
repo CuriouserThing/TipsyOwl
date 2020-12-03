@@ -1,29 +1,25 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using Bjerg;
 using Bjerg.Lor;
 using Discord;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TipsyOwl
 {
     public class DeckEmbedBuilder
     {
-        private ICatalogService CatalogService { get; }
+        public DeckEmbedBuilder(IOptionsSnapshot<TipsySettings> settings, ILogger<CardEmbedBuilder> logger)
+        {
+            Settings = settings.Value;
+            Logger = logger;
+        }
 
         private TipsySettings Settings { get; }
 
         private ILogger Logger { get; }
-
-        public DeckEmbedBuilder(ICatalogService catalogService, IOptionsSnapshot<TipsySettings> settings, ILogger<CardEmbedBuilder> logger)
-        {
-            CatalogService = catalogService;
-            Settings = settings.Value;
-            Logger = logger;
-        }
 
         private Dictionary<int, char> FullWidthNumbers { get; } = new Dictionary<int, char>
         {
@@ -36,7 +32,7 @@ namespace TipsyOwl
             [6] = '６',
             [7] = '７',
             [8] = '８',
-            [9] = '９',
+            [9] = '９'
         };
 
         private string GetCardLine(ICard card, int count)
@@ -78,6 +74,7 @@ namespace TipsyOwl
                     fieldValues.Add(sb.ToString());
                     sb = new StringBuilder();
                 }
+
                 _ = sb.AppendLine(cardLine);
             }
 
@@ -95,6 +92,7 @@ namespace TipsyOwl
             {
                 return fieldBuilders;
             }
+
             if (count > 1)
             {
                 tryInline = false;
@@ -116,7 +114,7 @@ namespace TipsyOwl
             return fieldBuilders;
         }
 
-        private DeckEmbedBlueprint CreateBlueprint(Deck deck, Catalog homeCatalog)
+        public DeckEmbedBlueprint CreateBlueprint(Deck deck, Catalog homeCatalog)
         {
             var regionLines = new List<string>();
             var warningLines = new List<string>();
@@ -173,7 +171,6 @@ namespace TipsyOwl
                         other.Add(cc);
                     }
                 }
-
             }
 
             bool tryInline = true;
@@ -181,14 +178,17 @@ namespace TipsyOwl
             {
                 cardFieldBuilders.AddRange(GetFieldBuilders("Champions", champions, ref tryInline));
             }
+
             if (followers.Count > 0)
             {
                 cardFieldBuilders.AddRange(GetFieldBuilders("Followers", followers, ref tryInline));
             }
+
             if (spells.Count > 0)
             {
                 cardFieldBuilders.AddRange(GetFieldBuilders("Spells", spells, ref tryInline));
             }
+
             if (other.Count > 0)
             {
                 cardFieldBuilders.AddRange(GetFieldBuilders("Other", other, ref tryInline));
@@ -209,17 +209,6 @@ namespace TipsyOwl
                 WarningLines = warningLines,
                 CardFieldBuilders = cardFieldBuilders
             };
-        }
-
-        public async Task<DeckEmbedBlueprint?> CreateBlueprintAsync(Deck deck)
-        {
-            Catalog? homeCatalog = await CatalogService.GetHomeCatalog(deck.Version);
-            if (homeCatalog is null)
-            {
-                Logger.LogError($"Couldn't get a home catalog for v{deck.Version}. Can't create an embed for {deck}.");
-                return null;
-            }
-            return CreateBlueprint(deck, homeCatalog);
         }
     }
 }

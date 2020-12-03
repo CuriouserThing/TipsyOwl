@@ -1,30 +1,26 @@
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Text.RegularExpressions;
 using Bjerg;
 using Bjerg.Lor;
 using Discord;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace TipsyOwl
 {
     public class CardEmbedBuilder
     {
-        private ICatalogService CatalogService { get; }
+        public CardEmbedBuilder(IOptionsSnapshot<TipsySettings> settings, ILogger<CardEmbedBuilder> logger)
+        {
+            Settings = settings.Value;
+            Logger = logger;
+        }
 
         private TipsySettings Settings { get; }
 
         private ILogger Logger { get; }
-
-        public CardEmbedBuilder(ICatalogService catalogService, IOptionsSnapshot<TipsySettings> settings, ILogger<CardEmbedBuilder> logger)
-        {
-            CatalogService = catalogService;
-            Settings = settings.Value;
-            Logger = logger;
-        }
 
         private static Regex LinkRegex { get; } = new Regex(@"<link=(.+?)>(.*?)<\/link>");
         private static Regex StyleRegex { get; } = new Regex(@"<style=(.+?)>(.*?)<\/style>");
@@ -117,6 +113,7 @@ namespace TipsyOwl
                         Logger.LogWarning($"{nameof(TipsySettings.KeywordSprites)} references the sprite {keywordSprite} for keyword {keyword.Key}, but this sprite wasn't found in {nameof(TipsySettings.SpriteEmotes)}. Ignoring it.");
                     }
                 }
+
                 emotes = sb.ToString();
             }
             else if (Settings.SpriteEmotes.TryGetValue(keyword.Key, out ulong kw))
@@ -152,8 +149,14 @@ namespace TipsyOwl
                 : $"{regionName}";
         }
 
-        private Embed CreateEmbed(ICard card, ICard homeCard)
+        public Embed CreateEmbed(ICard card, Catalog homeCatalog)
         {
+            if (!homeCatalog.Cards.TryGetValue(card.Code, out ICard? homeCard))
+            {
+                homeCard = card;
+                Logger.LogError($"The home catalog for v{card.Version} doesn't have a card with code {card.Code}. Attempting to use the provided card instead.");
+            }
+
             var descBuilder = new StringBuilder(); // for the embed description
 
             var keywordStrings = new List<string>();
@@ -164,6 +167,7 @@ namespace TipsyOwl
                     keywordStrings.Add(GetKeywordString(keyword));
                 }
             }
+
             if (keywordStrings.Count > 0)
             {
                 _ = descBuilder.AppendLine(string.Join(" ", keywordStrings));
@@ -187,28 +191,29 @@ namespace TipsyOwl
             if (!string.IsNullOrWhiteSpace(card.LevelupDescription))
             {
                 string levelup = ProcessFormattedText(card.LevelupDescription);
-                _ = eb.AddField("Level Up", levelup, inline: false);
+                _ = eb.AddField("Level Up", levelup, false);
             }
 
             if (homeCard.Type != null)
             {
                 if (homeCard.Type.Name == "Unit" || homeCard.Type.Name == "Spell" || homeCard.Type.Name == "Landmark")
                 {
-                    _ = eb.AddField("Cost", card.Cost, inline: true);
+                    _ = eb.AddField("Cost", card.Cost, true);
                 }
+
                 if (homeCard.Type.Name == "Unit")
                 {
-                    _ = eb.AddField("Stats", $"{card.Attack} | {card.Health}", inline: true);
+                    _ = eb.AddField("Stats", $"{card.Attack} | {card.Health}", true);
                 }
             }
 
             if (card.Subtypes.Count == 1)
             {
-                _ = eb.AddField("Subtype", card.Subtypes[0], inline: true);
+                _ = eb.AddField("Subtype", card.Subtypes[0], true);
             }
             else if (card.Subtypes.Count > 1)
             {
-                _ = eb.AddField("Subtypes", string.Join(", ", card.Subtypes), inline: true);
+                _ = eb.AddField("Subtypes", string.Join(", ", card.Subtypes), true);
             }
 
             var rb = new StringBuilder();
@@ -217,25 +222,10 @@ namespace TipsyOwl
             {
                 _ = rb.Append($" ({card.Rarity.Name})");
             }
-            _ = eb.AddField("Region", rb.ToString(), inline: true);
+
+            _ = eb.AddField("Region", rb.ToString(), true);
 
             return eb.Build();
-        }
-
-        public async Task<Embed?> CreateEmbedAsync(ICard card)
-        {
-            Catalog? homeCatalog = await CatalogService.GetHomeCatalog(card.Version);
-            if (homeCatalog is null)
-            {
-                Logger.LogError($"Couldn't get a home catalog for v{card.Version}. Can't create an embed for {card}.");
-                return null;
-            }
-            if (!homeCatalog.Cards.TryGetValue(card.Code, out ICard? homeCard))
-            {
-                Logger.LogError($"The home catalog for v{card.Version} doesn't have a card with code {card.Code}. Can't create an embed for it.");
-                return null;
-            }
-            return CreateEmbed(card, homeCard);
         }
     }
 }
