@@ -10,9 +10,9 @@ using Microsoft.Extensions.Options;
 
 namespace TipsyOwl
 {
-    public class CardEmbedBuilder
+    public class CardEmbedFactory
     {
-        public CardEmbedBuilder(IOptionsSnapshot<TipsySettings> settings, ILogger<CardEmbedBuilder> logger)
+        public CardEmbedFactory(IOptionsSnapshot<TipsySettings> settings, ILogger<CardEmbedFactory> logger)
         {
             Settings = settings.Value;
             Logger = logger;
@@ -128,6 +128,28 @@ namespace TipsyOwl
             return $"[**{emotes}{keyword.Name}**]";
         }
 
+        internal string GetRegionCardString(ICard card)
+        {
+            string regionKey, regionAbbr;
+            LorFaction? region = card.Region;
+            if (region is null)
+            {
+                regionKey = "All";
+                regionAbbr = "x"; // use a dummy char for the emote name
+            }
+            else
+            {
+                regionKey = region.Key;
+                regionAbbr = region.Abbreviation; // use two-letter faction code for the emote name
+            }
+
+            string cardName = card.Name ?? "Unknown Card";
+
+            return Settings.RegionIconEmotes.TryGetValue(regionKey, out ulong regionEmote)
+                ? $"<:{regionAbbr}:{regionEmote}> {cardName}"
+                : $"{cardName}";
+        }
+
         private string GetRegionString(LorFaction? region)
         {
             string regionKey, regionName, regionAbbr;
@@ -149,7 +171,7 @@ namespace TipsyOwl
                 : $"{regionName}";
         }
 
-        public Embed CreateEmbed(ICard card, Catalog homeCatalog)
+        public Embed BuildEmbed(ICard card, Catalog homeCatalog)
         {
             if (!homeCatalog.Cards.TryGetValue(card.Code, out ICard? homeCard))
             {
@@ -191,7 +213,7 @@ namespace TipsyOwl
             if (!string.IsNullOrWhiteSpace(card.LevelupDescription))
             {
                 string levelup = ProcessFormattedText(card.LevelupDescription);
-                _ = eb.AddField("Level Up", levelup, false);
+                _ = eb.AddField("Level Up", levelup);
             }
 
             if (homeCard.Type != null)

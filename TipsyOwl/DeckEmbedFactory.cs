@@ -9,9 +9,9 @@ using Microsoft.Extensions.Options;
 
 namespace TipsyOwl
 {
-    public class DeckEmbedBuilder
+    public class DeckEmbedFactory
     {
-        public DeckEmbedBuilder(IOptionsSnapshot<TipsySettings> settings, ILogger<CardEmbedBuilder> logger)
+        public DeckEmbedFactory(IOptionsSnapshot<TipsySettings> settings, ILogger<DeckEmbedFactory> logger)
         {
             Settings = settings.Value;
             Logger = logger;
@@ -114,7 +114,7 @@ namespace TipsyOwl
             return fieldBuilders;
         }
 
-        public DeckEmbedBlueprint CreateBlueprint(Deck deck, Catalog homeCatalog)
+        public Embed BuildEmbed(Deck deck, Catalog homeCatalog)
         {
             var regionLines = new List<string>();
             var warningLines = new List<string>();
@@ -129,7 +129,7 @@ namespace TipsyOwl
 
             foreach (LorFaction region in regions)
             {
-                if (Settings.RegionIconEmotes.TryGetValue(region.Name, out ulong emote))
+                if (Settings.RegionIconEmotes.TryGetValue(region.Key, out ulong emote))
                 {
                     regionLines.Add($"<:{region.Abbreviation}:{emote}> {region.Name}");
                 }
@@ -203,12 +203,19 @@ namespace TipsyOwl
                 warningLines.Add($"⚠️ Invalid deck: too many cards ({deckSize}).");
             }
 
-            return new DeckEmbedBlueprint
+            const int titleLimit = 256; // Discord's limit on title length
+
+            string joined = string.Join('\n', regionLines);
+            if (joined.Length > titleLimit)
             {
-                RegionLines = regionLines,
-                WarningLines = warningLines,
-                CardFieldBuilders = cardFieldBuilders
-            };
+                joined = "Deck";
+            }
+
+            return new EmbedBuilder()
+                .WithTitle(joined)
+                .WithDescription(string.Join('\n', warningLines))
+                .WithFields(cardFieldBuilders)
+                .Build();
         }
     }
 }
