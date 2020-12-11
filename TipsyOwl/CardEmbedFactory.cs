@@ -171,6 +171,18 @@ namespace TipsyOwl
                 : $"{regionName}";
         }
 
+        private string GetRarityString(LorRarity rarity)
+        {
+            if (Settings.RarityIconEmotes.TryGetValue(rarity.Key, out ulong rarityEmote))
+            {
+                return $"<:{rarity.Key}:{rarityEmote}> {rarity.Name}";
+            }
+            else
+            {
+                return rarity.Name;
+            }
+        }
+
         public Embed BuildEmbed(ICard card, Catalog homeCatalog)
         {
             if (!homeCatalog.Cards.TryGetValue(card.Code, out ICard? homeCard))
@@ -242,7 +254,7 @@ namespace TipsyOwl
             _ = rb.Append(GetRegionString(card.Region));
             if (card.Rarity != null && card.Rarity.Key != "None")
             {
-                _ = rb.Append($" ({card.Rarity.Name})");
+                _ = rb.Append($" {GetRarityString(card.Rarity)}");
             }
 
             _ = eb.AddField("Region", rb.ToString(), true);
