@@ -216,6 +216,15 @@ namespace TipsyOwl
                 _ = eb.AddField("Level Up", levelup);
             }
 
+            if (card.Subtypes.Count == 1)
+            {
+                _ = eb.AddField("Subtype", card.Subtypes[0]);
+            }
+            else if (card.Subtypes.Count > 1)
+            {
+                _ = eb.AddField("Subtypes", string.Join(", ", card.Subtypes));
+            }
+
             if (homeCard.Type != null)
             {
                 if (homeCard.Type.Name == "Unit" || homeCard.Type.Name == "Spell" || homeCard.Type.Name == "Landmark")
@@ -227,15 +236,6 @@ namespace TipsyOwl
                 {
                     _ = eb.AddField("Stats", $"{card.Attack} | {card.Health}", true);
                 }
-            }
-
-            if (card.Subtypes.Count == 1)
-            {
-                _ = eb.AddField("Subtype", card.Subtypes[0], true);
-            }
-            else if (card.Subtypes.Count > 1)
-            {
-                _ = eb.AddField("Subtypes", string.Join(", ", card.Subtypes), true);
             }
 
             var rb = new StringBuilder();
