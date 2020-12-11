@@ -246,7 +246,7 @@ namespace TipsyOwl
 
                 if (homeCard.Type.Name == "Unit")
                 {
-                    _ = eb.AddField("Stats", $"{card.Attack} | {card.Health}", true);
+                    _ = eb.AddField("Stats", $"{card.Attack}|{card.Health}", true);
                 }
             }
 
