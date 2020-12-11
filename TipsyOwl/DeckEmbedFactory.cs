@@ -170,36 +170,36 @@ namespace TipsyOwl
                 if (!homeCatalog.Cards.TryGetValue(card.Code, out ICard? homeCard))
                 {
                     Logger.LogWarning($"Couldn't find card {card.Code} in the home locale catalog. Using the provided deck card with locale {card.Locale} instead.");
-                    other.Add(cc);
+                    homeCard = card;
+                }
+
+                if (homeCard.Supertype?.Name == "Champion")
+                {
+                    champions.Add(cc);
                 }
                 else
                 {
-                    if (homeCard.Supertype?.Name == "Champion")
+                    switch (homeCard.Type?.Name)
                     {
-                        champions.Add(cc);
-                    }
-                    else if (homeCard.Type?.Name == "Unit")
-                    {
-                        followers.Add(cc);
-                    }
-                    else if (homeCard.Type?.Name == "Spell")
-                    {
-                        spells.Add(cc);
-                    }
-                    else if (homeCard.Type?.Name == "Landmark")
-                    {
-                        landmarks.Add(cc);
-                    }
-                    else
-                    {
-                        other.Add(cc);
+                        case "Unit":
+                            followers.Add(cc);
+                            break;
+                        case "Spell":
+                            spells.Add(cc);
+                            break;
+                        case "Landmark":
+                            landmarks.Add(cc);
+                            break;
+                        default:
+                            other.Add(cc);
+                            break;
                     }
                 }
             }
 
             bool singleton = deckSize == deck.Cards.Count;
-            var cardFieldBuilders = new List<EmbedFieldBuilder>();
 
+            var cardFieldBuilders = new List<EmbedFieldBuilder>();
             bool tryInline = true;
             if (champions.Count > 0)
             {
