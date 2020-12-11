@@ -76,7 +76,7 @@ namespace TipsyOwl
             return d;
         }
 
-        private IReadOnlyList<string> BuildFieldValues(IReadOnlyList<CardAndCount> ccs, bool singleton)
+        private IReadOnlyList<string> BuildFieldValues(IReadOnlyList<CardAndCount> ccs, bool hideCounts)
         {
             const int fieldLimit = 1024; // Discord's limit on field length
             const int newLineMax = 2; // max number of chars a new-line can be in any environment
@@ -91,7 +91,7 @@ namespace TipsyOwl
                 .ThenBy(cc => cc.Card.Code)
                 .ToArray();
 
-            int digits = singleton ? 0 : cards.Max(c => CountDigits(c.Count));
+            int digits = hideCounts ? 0 : cards.Max(c => CountDigits(c.Count));
 
             foreach ((ICard card, int count) in cards)
             {
@@ -110,31 +110,30 @@ namespace TipsyOwl
             return fieldValues;
         }
 
-        private IReadOnlyList<EmbedFieldBuilder> GetFieldBuilders(string name, IReadOnlyList<CardAndCount> ccs, bool singleton, ref bool tryInline)
+        private IReadOnlyList<EmbedFieldBuilder> GetFieldBuilders(string name, IReadOnlyList<CardAndCount> ccs, bool hideCounts)
         {
-            IReadOnlyList<string> fieldValues = BuildFieldValues(ccs, singleton);
-            var fieldBuilders = new EmbedFieldBuilder[fieldValues.Count];
-
+            IReadOnlyList<string> fieldValues = BuildFieldValues(ccs, hideCounts);
             int count = fieldValues.Count;
+            var fieldBuilders = new EmbedFieldBuilder[count];
+
             if (count == 0)
             {
                 return fieldBuilders;
             }
 
-            if (count > 1)
+            if (count == 1)
             {
-                tryInline = false;
+                fieldBuilders[0] = new EmbedFieldBuilder()
+                    .WithName(name)
+                    .WithValue(fieldValues[0])
+                    .WithIsInline(true);
+                return fieldBuilders;
             }
 
-            fieldBuilders[0] = new EmbedFieldBuilder()
-                .WithName(name)
-                .WithValue(fieldValues[0])
-                .WithIsInline(tryInline);
-
-            for (int i = 1; i < count; i++)
+            for (int i = 0; i < count; i++)
             {
                 fieldBuilders[i] = new EmbedFieldBuilder()
-                    .WithName($"{name} (cont.)")
+                    .WithName($"{name} ({i + 1}/{count})")
                     .WithValue(fieldValues[i])
                     .WithIsInline(true);
             }
@@ -200,30 +199,29 @@ namespace TipsyOwl
             bool singleton = deckSize == deck.Cards.Count;
 
             var cardFieldBuilders = new List<EmbedFieldBuilder>();
-            bool tryInline = true;
             if (champions.Count > 0)
             {
-                cardFieldBuilders.AddRange(GetFieldBuilders("Champions", champions, singleton, ref tryInline));
+                cardFieldBuilders.AddRange(GetFieldBuilders("Champions", champions, singleton));
             }
 
             if (followers.Count > 0)
             {
-                cardFieldBuilders.AddRange(GetFieldBuilders("Followers", followers, singleton, ref tryInline));
+                cardFieldBuilders.AddRange(GetFieldBuilders("Followers", followers, singleton));
             }
 
             if (spells.Count > 0)
             {
-                cardFieldBuilders.AddRange(GetFieldBuilders("Spells", spells, singleton, ref tryInline));
+                cardFieldBuilders.AddRange(GetFieldBuilders("Spells", spells, singleton));
             }
 
             if (landmarks.Count > 0)
             {
-                cardFieldBuilders.AddRange(GetFieldBuilders("Landmarks", landmarks, singleton, ref tryInline));
+                cardFieldBuilders.AddRange(GetFieldBuilders("Landmarks", landmarks, singleton));
             }
 
             if (other.Count > 0)
             {
-                cardFieldBuilders.AddRange(GetFieldBuilders("Other", other, singleton, ref tryInline));
+                cardFieldBuilders.AddRange(GetFieldBuilders("Other", other, singleton));
             }
 
             var regionsBuilder = new StringBuilder();
