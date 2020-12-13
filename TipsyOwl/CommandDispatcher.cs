@@ -1,50 +1,30 @@
-﻿using Discord;
-using Discord.Commands;
-using Discord.WebSocket;
-using Microsoft.Extensions.DependencyInjection;
-using System;
+﻿using System;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Discord.Commands;
+using Discord.WebSocket;
 
 namespace TipsyOwl
 {
-    public class CommandHandler : IDisposable
+    public class CommandDispatcher
     {
-        private DiscordSocketClient Client { get; }
-        private CommandService Commands { get; }
-        private IGuildSettingsSource GuildSettingsSource { get; }
-        private ICommandResultHandler ResultHandler { get; }
-        private IServiceProvider Services { get; }
-
-        private CommandHandler(DiscordSocketClient client, CommandService commands, IGuildSettingsSource guildSettingsSource, ICommandResultHandler resultHandler, IServiceProvider services)
+        public CommandDispatcher(DiscordSocketClient client, CommandService commands, IServiceProvider services, IGuildSettingsSource guildSettingsSource)
         {
             Client = client;
             Commands = commands;
-            GuildSettingsSource = guildSettingsSource;
-            ResultHandler = resultHandler;
             Services = services;
+            GuildSettingsSource = guildSettingsSource;
         }
 
-        private void Register()
-        {
-            Client.MessageReceived += ClientOnMessageReceivedAsync;
-            Commands.CommandExecuted += CommandsOnCommandExecutedAsync;
-        }
+        private DiscordSocketClient Client { get; }
 
-        private void Deregister()
-        {
-            Client.MessageReceived -= ClientOnMessageReceivedAsync;
-            Commands.CommandExecuted -= CommandsOnCommandExecutedAsync;
-        }
+        private CommandService Commands { get; }
 
-        public static CommandHandler CreateAndRegister(DiscordSocketClient client, CommandService commands, IGuildSettingsSource guildSettingsSource, ICommandResultHandler resultHandler, IServiceProvider services)
-        {
-            var handler = new CommandHandler(client, commands, guildSettingsSource, resultHandler, services);
-            handler.Register();
-            return handler;
-        }
+        private IServiceProvider Services { get; }
 
-        private async Task ClientOnMessageReceivedAsync(SocketMessage message)
+        private IGuildSettingsSource GuildSettingsSource { get; }
+
+        public async Task DispatchFromMessageReceivedAsync(SocketMessage message)
         {
             // Never reply to messages from non-humans >:{
             if (!(message is SocketUserMessage userMessage) || userMessage.Author.IsBot)
@@ -88,8 +68,7 @@ namespace TipsyOwl
             // Try to execute a command if any of the above checks passed!
             if (isValid)
             {
-                using IServiceScope scope = Services.CreateScope();
-                _ = await Commands.ExecuteAsync(context, argPos, scope.ServiceProvider);
+                _ = await Commands.ExecuteAsync(context, argPos, Services);
             }
         }
 
@@ -114,44 +93,8 @@ namespace TipsyOwl
             {
                 Match match = matches[i];
                 string command = match.Groups[1].Value.Trim();
-                using IServiceScope s = Services.CreateScope();
-                _ = await Commands.ExecuteAsync(context, $"{alias} {command}", s.ServiceProvider);
+                _ = await Commands.ExecuteAsync(context, $"{alias} {command}", Services);
             }
         }
-
-        private async Task CommandsOnCommandExecutedAsync(Optional<CommandInfo> arg1, ICommandContext arg2, IResult arg3)
-        {
-            await ResultHandler.HandleResult(arg1, arg2, arg3);
-        }
-
-        #region IDisposable
-
-        private bool _disposedValue;
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!_disposedValue)
-            {
-                if (disposing)
-                {
-                    Deregister();
-                }
-
-                _disposedValue = true;
-            }
-        }
-
-        ~CommandHandler()
-        {
-            Dispose(disposing: false);
-        }
-
-        public void Dispose()
-        {
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
-        }
-
-        #endregion
     }
 }
