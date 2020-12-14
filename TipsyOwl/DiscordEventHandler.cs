@@ -41,13 +41,15 @@ namespace TipsyOwl
 
         private async Task ClientOnMessageReceivedAsync(SocketMessage message)
         {
-            CommandDispatcher dispatcher = Services.GetRequiredService<CommandDispatcher>();
+            using IServiceScope scope = Services.CreateScope();
+            CommandDispatcher dispatcher = scope.ServiceProvider.GetRequiredService<CommandDispatcher>();
             await dispatcher.DispatchFromMessageReceivedAsync(message);
         }
 
         private async Task CommandsOnCommandExecutedAsync(Optional<CommandInfo> arg1, ICommandContext arg2, IResult arg3)
         {
-            ICommandResultHandler resultHandler = Services.GetRequiredService<ICommandResultHandler>();
+            using IServiceScope scope = Services.CreateScope();
+            ICommandResultHandler resultHandler = scope.ServiceProvider.GetRequiredService<ICommandResultHandler>();
             await resultHandler.HandleResult(arg1, arg2, arg3);
         }
 
