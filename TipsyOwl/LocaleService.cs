@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Bjerg;
 using Discord;
@@ -67,6 +68,17 @@ namespace TipsyOwl
             }
 
             return TryParseLocale(settings.Locale, out Locale? locale) ? locale! : HomeLocale;
+        }
+
+        public IEnumerable<Locale> GetRecognizedLocales()
+        {
+            foreach (string s in TipsySettings.Locales)
+            {
+                if (TryParseLocale(s, out Locale? other))
+                {
+                    yield return other!;
+                }
+            }
         }
     }
 }
