@@ -4,6 +4,6 @@ namespace TipsyOwl
 {
     public interface IGuildSettingsSource
     {
-        Task<CommandSettings> GetCommandSettings(ulong guild);
+        Task<GuildSettings> GetSettings(ulong guild);
     }
 }

@@ -49,7 +49,7 @@ namespace TipsyOwl
                 // Guild channels are valid with a string prefix.
                 case SocketTextChannel guildChannel:
                 {
-                    CommandSettings settings = await GuildSettingsSource.GetCommandSettings(guildChannel.Id);
+                    GuildSettings settings = await GuildSettingsSource.GetSettings(guildChannel.Id);
 
                     string? prefix = settings.CommandPrefix;
                     if (prefix != null && userMessage.HasStringPrefix(prefix, ref argPos))
@@ -72,7 +72,7 @@ namespace TipsyOwl
             }
         }
 
-        private async Task HandleInlineCommandsAsync(string text, ICommandContext context, CommandSettings settings)
+        private async Task HandleInlineCommandsAsync(string text, ICommandContext context, GuildSettings settings)
         {
             if (!settings.AllowInlineCommands)
             {

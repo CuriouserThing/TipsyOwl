@@ -4,16 +4,16 @@ namespace TipsyOwl
 {
     public class DefaultGuildSettingsSource : IGuildSettingsSource
     {
-        public CommandSettings DefaultCommandSettings { get; }
+        public GuildSettings DefaultSettings { get; }
 
-        public DefaultGuildSettingsSource(CommandSettings defaultCommandSettings)
+        public DefaultGuildSettingsSource(GuildSettings defaultSettings)
         {
-            DefaultCommandSettings = defaultCommandSettings;
+            DefaultSettings = defaultSettings;
         }
 
-        public Task<CommandSettings> GetCommandSettings(ulong guild)
+        public Task<GuildSettings> GetSettings(ulong guild)
         {
-            return Task.FromResult(DefaultCommandSettings);
+            return Task.FromResult(DefaultSettings);
         }
     }
 }
