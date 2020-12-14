@@ -6,6 +6,8 @@ namespace TipsyOwl
     {
         public IList<int> LatestVersion { get; init; } = new List<int>(0);
 
+        public IList<string> Locales { get; init; } = new List<string>(0);
+
         public IList<string> HiddenCardKeywords { get; init; } = new List<string>(0);
 
         public IDictionary<string, ulong> RegionIconEmotes { get; init; } = new Dictionary<string, ulong>(0);
