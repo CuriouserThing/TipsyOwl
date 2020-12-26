@@ -19,7 +19,7 @@ namespace TipsyOwl
 
         private TipsySettings TipsySettings { get; }
 
-        private static Locale HomeLocale { get; } = new Locale("en", "US");
+        private static Locale HomeLocale { get; } = new("en", "US");
 
         public bool TryParseLocale(string s, out Locale? result)
         {

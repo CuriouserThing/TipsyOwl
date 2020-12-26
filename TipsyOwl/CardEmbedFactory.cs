@@ -22,11 +22,11 @@ namespace TipsyOwl
 
         private ILogger Logger { get; }
 
-        private static Regex LinkRegex { get; } = new Regex(@"<link=(.+?)>(.*?)<\/link>");
-        private static Regex StyleRegex { get; } = new Regex(@"<style=(.+?)>(.*?)<\/style>");
-        private static Regex SpriteRegex { get; } = new Regex(@"<sprite name=(.*?)>");
-        private static Regex BrRegex { get; } = new Regex(@"<br>");
-        private static Regex NobrRegex { get; } = new Regex(@"<nobr>(.*?)<\/nobr>");
+        private static Regex LinkRegex { get; } = new(@"<link=(.+?)>(.*?)<\/link>");
+        private static Regex StyleRegex { get; } = new(@"<style=(.+?)>(.*?)<\/style>");
+        private static Regex SpriteRegex { get; } = new(@"<sprite name=(.*?)>");
+        private static Regex BrRegex { get; } = new(@"<br>");
+        private static Regex NobrRegex { get; } = new(@"<nobr>(.*?)<\/nobr>");
 
         private string EvalLinkMatch(Match match)
         {

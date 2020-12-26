@@ -35,7 +35,7 @@ namespace TipsyOwl
             var context = new SocketCommandContext(Client, userMessage);
 
             // Flag as valid if user mentions bot (regardless of current channel type), and advance argPos past mention string.
-            int argPos = 0;
+            var argPos = 0;
             bool isValid = userMessage.HasMentionPrefix(Client.CurrentUser, ref argPos);
 
             switch (userMessage.Channel)
@@ -89,7 +89,7 @@ namespace TipsyOwl
 
             var regex = new Regex(Regex.Escape(opener) + @"(.+?)" + Regex.Escape(closer));
             MatchCollection matches = regex.Matches(text);
-            for (int i = 0; i < matches.Count; i++)
+            for (var i = 0; i < matches.Count; i++)
             {
                 Match match = matches[i];
                 string command = match.Groups[1].Value.Trim();

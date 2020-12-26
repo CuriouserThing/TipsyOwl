@@ -28,7 +28,7 @@ namespace TipsyOwl
 
         public IReadOnlyList<Embed> GetAllEmbeds()
         {
-            return new[] {GetMainEmbed()};
+            return new[] { GetMainEmbed() };
         }
     }
 }

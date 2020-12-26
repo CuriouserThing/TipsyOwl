@@ -30,7 +30,7 @@ namespace TipsyOwl
             if (digits > 0)
             {
                 var sb = new StringBuilder();
-                int d = 0;
+                var d = 0;
                 do
                 {
                     int n = count % 10;
@@ -66,7 +66,7 @@ namespace TipsyOwl
 
         private static int CountDigits(int n)
         {
-            int d = 0;
+            var d = 0;
             do
             {
                 n /= 10;
@@ -79,8 +79,8 @@ namespace TipsyOwl
         private IReadOnlyList<string> BuildFieldValues(IReadOnlyList<CardAndCount> ccs, bool hideCounts)
         {
             const int fieldLimit = 1024; // Discord's limit on field length
-            const int newLineMax = 2; // max number of chars a new-line can be in any environment
-            const int lineCushion = 2; // safety cushion to make sure a line doesn't push past the field limit
+            const int newLineMax = 2;    // max number of chars a new-line can be in any environment
+            const int lineCushion = 2;   // safety cushion to make sure a line doesn't push past the field limit
 
             var fieldValues = new List<string>();
             var sb = new StringBuilder();
@@ -130,7 +130,7 @@ namespace TipsyOwl
                 return fieldBuilders;
             }
 
-            for (int i = 0; i < count; i++)
+            for (var i = 0; i < count; i++)
             {
                 fieldBuilders[i] = new EmbedFieldBuilder()
                     .WithName($"{name} ({i + 1}/{count})")
@@ -157,8 +157,8 @@ namespace TipsyOwl
             var landmarks = new List<CardAndCount>();
             var other = new List<CardAndCount>();
 
-            int deckSize = 0;
-            int uncollectibleCount = 0;
+            var deckSize = 0;
+            var uncollectibleCount = 0;
 
             foreach (CardAndCount cc in deck.Cards)
             {
