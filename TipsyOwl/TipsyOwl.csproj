@@ -1,17 +1,23 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
-    <Authors>Axolotl Maid Service</Authors>
-    <Version>0.1.0</Version>
-  </PropertyGroup>
-  <PropertyGroup>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
-  <ItemGroup>
-    <ProjectReference Include="../../Bjerg/Bjerg/Bjerg.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Discord.Net" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Extensions.Options" Version="5.0.0" />
-  </ItemGroup>
+
+    <PropertyGroup>
+        <TargetFramework>net5.0</TargetFramework>
+        <Version>0.1.0</Version>
+        <Authors>Axolotl Maid Service</Authors>
+        <RepositoryUrl>https://github.com/TheMostCuriousThing/Bjerg</RepositoryUrl>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../../Bjerg/Bjerg/Bjerg.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Discord.Net" Version="2.3.0-dev-20201223.7" />
+        <PackageReference Include="Microsoft.Extensions.Options" Version="5.0.0" />
+    </ItemGroup>
+
 </Project>
