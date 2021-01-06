@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Bjerg;
 using Discord;
 using Microsoft.Extensions.Options;
+using WumpusHall;
 
 namespace TipsyOwl
 {

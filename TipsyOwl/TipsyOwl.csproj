@@ -13,10 +13,10 @@
 
     <ItemGroup>
         <ProjectReference Include="../../Bjerg/Bjerg/Bjerg.csproj" />
+        <ProjectReference Include="../../WumpusHall/WumpusHall/WumpusHall.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Discord.Net" Version="2.3.0-dev-20201223.7" />
         <PackageReference Include="Microsoft.Extensions.Options" Version="5.0.0" />
     </ItemGroup>
 
