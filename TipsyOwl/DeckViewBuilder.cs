@@ -1,148 +1,41 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using Bjerg;
 using Bjerg.Lor;
 using Discord;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using WumpusHall;
 
 namespace TipsyOwl
 {
-    public class DeckEmbedFactory
+    public class DeckViewBuilder : IViewBuilder<Deck>
     {
-        public DeckEmbedFactory(IOptionsSnapshot<TipsySettings> settings, ILogger<DeckEmbedFactory> logger)
+        public DeckViewBuilder(ICatalogService catalogService, IOptionsSnapshot<TipsySettings> settings, ILogger<DeckViewBuilder> logger)
         {
+            CatalogService = catalogService;
             Settings = settings.Value;
             Logger = logger;
         }
+
+        private ICatalogService CatalogService { get; }
 
         private TipsySettings Settings { get; }
 
         private ILogger Logger { get; }
 
-        private string GetCardLine(ICard card, int count, int digits)
+        public async Task<MessageView> BuildView(Deck item)
         {
-            string number;
-            string emote;
-            string name = card.Name ?? card.Code;
-
-            if (digits > 0)
-            {
-                var sb = new StringBuilder();
-                var d = 0;
-                do
-                {
-                    int n = count % 10;
-                    count /= 10;
-                    sb.Insert(0, "０１２３４５６７８９"[n]);
-                    d++;
-                } while (count > 0);
-
-                while (d < digits)
-                {
-                    sb.Insert(0, '　'); // full-width space
-                    d++;
-                }
-
-                number = $"**{sb}×**";
-            }
-            else
-            {
-                number = string.Empty;
-            }
-
-            if (card.Region != null && Settings.RegionIndicatorEmotes.TryGetValue(card.Region.Key, out ulong emoteId))
-            {
-                emote = $"<:c:{emoteId}>";
-            }
-            else
-            {
-                emote = number.Length > 0 ? " " : string.Empty;
-            }
-
-            return $"{number}{emote}{name}";
+            Embed embed = await BuildEmbed(item);
+            return new MessageView(embed);
         }
 
-        private static int CountDigits(int n)
+        private async Task<Embed> BuildEmbed(Deck deck)
         {
-            var d = 0;
-            do
-            {
-                n /= 10;
-                d++;
-            } while (n > 0);
+            Catalog homeCatalog = await CatalogService.GetHomeCatalog(deck.Version);
 
-            return d;
-        }
-
-        private IReadOnlyList<string> BuildFieldValues(IReadOnlyList<CardAndCount> ccs, bool hideCounts)
-        {
-            const int fieldLimit = 1024; // Discord's limit on field length
-            const int newLineMax = 2;    // max number of chars a new-line can be in any environment
-            const int lineCushion = 2;   // safety cushion to make sure a line doesn't push past the field limit
-
-            var fieldValues = new List<string>();
-            var sb = new StringBuilder();
-
-            CardAndCount[] cards = ccs
-                .OrderBy(cc => cc.Card.Cost)
-                .ThenBy(cc => cc.Card.Name)
-                .ThenBy(cc => cc.Card.Code)
-                .ToArray();
-
-            int digits = hideCounts ? 0 : cards.Max(c => CountDigits(c.Count));
-
-            foreach ((ICard card, int count) in cards)
-            {
-                string cardLine = GetCardLine(card, count, digits);
-                int length = sb.Length + cardLine.Length + newLineMax + lineCushion;
-                if (length > fieldLimit)
-                {
-                    fieldValues.Add(sb.ToString());
-                    sb = new StringBuilder();
-                }
-
-                _ = sb.AppendLine(cardLine);
-            }
-
-            fieldValues.Add(sb.ToString());
-            return fieldValues;
-        }
-
-        private IReadOnlyList<EmbedFieldBuilder> GetFieldBuilders(string name, IReadOnlyList<CardAndCount> ccs, bool hideCounts)
-        {
-            IReadOnlyList<string> fieldValues = BuildFieldValues(ccs, hideCounts);
-            int count = fieldValues.Count;
-            var fieldBuilders = new EmbedFieldBuilder[count];
-
-            if (count == 0)
-            {
-                return fieldBuilders;
-            }
-
-            if (count == 1)
-            {
-                fieldBuilders[0] = new EmbedFieldBuilder()
-                    .WithName(name)
-                    .WithValue(fieldValues[0])
-                    .WithIsInline(true);
-                return fieldBuilders;
-            }
-
-            for (var i = 0; i < count; i++)
-            {
-                fieldBuilders[i] = new EmbedFieldBuilder()
-                    .WithName($"{name} ({i + 1}/{count})")
-                    .WithValue(fieldValues[i])
-                    .WithIsInline(true);
-            }
-
-            return fieldBuilders;
-        }
-
-        public Embed BuildEmbed(Deck deck, Catalog homeCatalog)
-        {
             LorFaction[] regions = deck.Cards
                 .Where(cc => cc.Card.Region != null)
                 .GroupBy(cc => cc.Card.Region!)
@@ -269,6 +162,126 @@ namespace TipsyOwl
                 .WithDescription(desc)
                 .WithFields(cardFieldBuilders)
                 .Build();
+        }
+
+        private string GetCardLine(ICard card, int count, int digits)
+        {
+            string number;
+            string emote;
+            string name = card.Name ?? card.Code;
+
+            if (digits > 0)
+            {
+                var sb = new StringBuilder();
+                var d = 0;
+                do
+                {
+                    int n = count % 10;
+                    count /= 10;
+                    sb.Insert(0, "０１２３４５６７８９"[n]);
+                    d++;
+                } while (count > 0);
+
+                while (d < digits)
+                {
+                    sb.Insert(0, '　'); // full-width space
+                    d++;
+                }
+
+                number = $"**{sb}×**";
+            }
+            else
+            {
+                number = string.Empty;
+            }
+
+            if (card.Region != null && Settings.RegionIndicatorEmotes.TryGetValue(card.Region.Key, out ulong emoteId))
+            {
+                emote = $"<:c:{emoteId}>";
+            }
+            else
+            {
+                emote = number.Length > 0 ? " " : string.Empty;
+            }
+
+            return $"{number}{emote}{name}";
+        }
+
+        private static int CountDigits(int n)
+        {
+            var d = 0;
+            do
+            {
+                n /= 10;
+                d++;
+            } while (n > 0);
+
+            return d;
+        }
+
+        private IReadOnlyList<string> BuildFieldValues(IReadOnlyList<CardAndCount> ccs, bool hideCounts)
+        {
+            const int fieldLimit = 1024; // Discord's limit on field length
+            const int newLineMax = 2;    // max number of chars a new-line can be in any environment
+            const int lineCushion = 2;   // safety cushion to make sure a line doesn't push past the field limit
+
+            var fieldValues = new List<string>();
+            var sb = new StringBuilder();
+
+            CardAndCount[] cards = ccs
+                .OrderBy(cc => cc.Card.Cost)
+                .ThenBy(cc => cc.Card.Name)
+                .ThenBy(cc => cc.Card.Code)
+                .ToArray();
+
+            int digits = hideCounts ? 0 : cards.Max(c => CountDigits(c.Count));
+
+            foreach ((ICard card, int count) in cards)
+            {
+                string cardLine = GetCardLine(card, count, digits);
+                int length = sb.Length + cardLine.Length + newLineMax + lineCushion;
+                if (length > fieldLimit)
+                {
+                    fieldValues.Add(sb.ToString());
+                    sb = new StringBuilder();
+                }
+
+                _ = sb.AppendLine(cardLine);
+            }
+
+            fieldValues.Add(sb.ToString());
+            return fieldValues;
+        }
+
+        private IReadOnlyList<EmbedFieldBuilder> GetFieldBuilders(string name, IReadOnlyList<CardAndCount> ccs, bool hideCounts)
+        {
+            IReadOnlyList<string> fieldValues = BuildFieldValues(ccs, hideCounts);
+            int count = fieldValues.Count;
+            var fieldBuilders = new EmbedFieldBuilder[count];
+
+            if (count == 0)
+            {
+                return fieldBuilders;
+            }
+
+            if (count == 1)
+            {
+                fieldBuilders[0] = new EmbedFieldBuilder()
+                    .WithName(name)
+                    .WithValue(fieldValues[0])
+                    .WithIsInline(true);
+                return fieldBuilders;
+            }
+
+            for (var i = 0; i < count; i++)
+            {
+                fieldBuilders[i] = new EmbedFieldBuilder()
+                    .WithName($"{name} ({i + 1}/{count})")
+                    .WithValue(fieldValues[i])
+                    .WithIsInline(true);
+            }
+
+            return fieldBuilders;
         }
     }
 }

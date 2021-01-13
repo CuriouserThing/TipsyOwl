@@ -1,15 +1,17 @@
 ﻿using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 using Bjerg.Lor;
 using Discord;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using WumpusHall;
 
 namespace TipsyOwl
 {
-    public class KeywordEmbedFactory
+    public class KeywordViewBuilder : IViewBuilder<LorKeyword>
     {
-        public KeywordEmbedFactory(IOptionsSnapshot<TipsySettings> settings, ILogger<CardEmbedFactory> logger)
+        public KeywordViewBuilder(IOptionsSnapshot<TipsySettings> settings, ILogger<CardboardViewBuilder> logger)
         {
             Settings = settings.Value;
             Logger = logger;
@@ -19,7 +21,21 @@ namespace TipsyOwl
 
         private ILogger Logger { get; }
 
-        internal string GetKeywordString(LorKeyword keyword)
+        public Task<MessageView> BuildView(LorKeyword item)
+        {
+            var view = new MessageView(BuildEmbed(item));
+            return Task.FromResult(view);
+        }
+
+        private Embed BuildEmbed(LorKeyword keyword)
+        {
+            return new EmbedBuilder()
+                .WithTitle(GetKeywordString(keyword))
+                .WithDescription(keyword.Description)
+                .Build();
+        }
+
+        public string GetKeywordString(LorKeyword keyword)
         {
             char abbr = keyword.Key[0];
             string emotes;
@@ -51,14 +67,6 @@ namespace TipsyOwl
             }
 
             return $"{emotes}{keyword.Name}";
-        }
-
-        public Embed BuildEmbed(LorKeyword keyword)
-        {
-            return new EmbedBuilder()
-                .WithTitle(GetKeywordString(keyword))
-                .WithDescription(keyword.Description)
-                .Build();
         }
     }
 }
