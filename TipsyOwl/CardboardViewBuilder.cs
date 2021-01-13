@@ -12,20 +12,11 @@ using WumpusHall;
 
 namespace TipsyOwl
 {
-    public class CardboardViewBuilder : IViewBuilder<ICard>
+    public class CardboardViewBuilder : CardViewBuilder
     {
-        public CardboardViewBuilder(ICatalogService catalogService, IOptionsSnapshot<TipsySettings> settings, ILogger<CardboardViewBuilder> logger)
+        public CardboardViewBuilder(ICatalogService catalogService, IOptionsSnapshot<TipsySettings> settings, ILogger<CardboardViewBuilder> logger) : base(catalogService, settings, logger)
         {
-            CatalogService = catalogService;
-            Settings = settings.Value;
-            Logger = logger;
         }
-
-        private ICatalogService CatalogService { get; }
-
-        private TipsySettings Settings { get; }
-
-        private ILogger Logger { get; }
 
         private static Regex LinkRegex { get; } = new(@"<link=(.+?)>(.*?)<\/link>");
         private static Regex StyleRegex { get; } = new(@"<style=(.+?)>(.*?)<\/style>");
@@ -33,7 +24,7 @@ namespace TipsyOwl
         private static Regex BrRegex { get; } = new(@"<br>");
         private static Regex NobrRegex { get; } = new(@"<nobr>(.*?)<\/nobr>");
 
-        public async Task<MessageView> BuildView(ICard item)
+        public override async Task<MessageView> BuildView(ICard item)
         {
             Embed embed = await BuildEmbed(item);
             return new MessageView(embed);
@@ -139,27 +130,6 @@ namespace TipsyOwl
             return $"[**{emotes}{keyword.Name}**]";
         }
 
-        private string GetRegionString(LorFaction? region)
-        {
-            string regionKey, regionName, regionAbbr;
-            if (region is null)
-            {
-                regionKey = "All";
-                regionName = "No Region";
-                regionAbbr = "x"; // use a dummy char for the emote name
-            }
-            else
-            {
-                regionKey = region.Key;
-                regionName = region.Name;
-                regionAbbr = region.Abbreviation; // use two-letter faction code for the emote name
-            }
-
-            return Settings.RegionIconEmotes.TryGetValue(regionKey, out ulong regionEmote)
-                ? $"<:{regionAbbr}:{regionEmote}> {regionName}"
-                : $"{regionName}";
-        }
-
         private string GetRarityString(LorRarity rarity)
         {
             if (Settings.RarityIconEmotes.TryGetValue(rarity.Key, out ulong rarityEmote))
@@ -174,12 +144,7 @@ namespace TipsyOwl
 
         private async Task<Embed> BuildEmbed(ICard card)
         {
-            Catalog homeCatalog = await CatalogService.GetHomeCatalog(card.Version);
-            if (!homeCatalog.Cards.TryGetValue(card.Code, out ICard? homeCard))
-            {
-                homeCard = card;
-                Logger.LogError($"The home catalog for v{card.Version} doesn't have a card with code {card.Code}. Attempting to use the provided card instead.");
-            }
+            ICard homeCard = await GetHomeCard(card);
 
             var descBuilder = new StringBuilder(); // for the embed description
 
