@@ -75,7 +75,7 @@ namespace TipsyOwl
 
             switch (homeCard.Type?.Name)
             {
-                case "Skill":
+                case "Ability":
                 {
                     string[] emotes = GetEmotes("Skill").ToArray();
                     return emotes.Length == 0 ? defaultEmote : emotes[0];

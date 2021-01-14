@@ -55,6 +55,8 @@ namespace TipsyOwl
 
         private string GetFlavorCategory(ICard card, ICard homeCard)
         {
+            // As far as I can tell, this approximates the rules for the header on each card flavor screen
+            
             if (homeCard.Supertype?.Name == "Champion")
             {
                 return card.Supertype?.Name ?? "Champion";
@@ -67,11 +69,7 @@ namespace TipsyOwl
 
             if (homeCard.Type != null)
             {
-                return homeCard.Type.Name switch
-                {
-                    "Skill" => "Ability",
-                    _       => card.Type?.Name ?? homeCard.Type.Name,
-                };
+                return card.Type?.Name ?? homeCard.Type.Name;
             }
 
             return "Card";
