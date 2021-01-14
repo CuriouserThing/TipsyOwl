@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -28,118 +29,6 @@ namespace TipsyOwl
         {
             Embed embed = await BuildEmbed(item);
             return new MessageView(embed);
-        }
-
-        private string EvalLinkMatch(Match match)
-        {
-            //string link = match.Groups[1].Value;
-            string text = match.Groups[2].Value;
-
-            return $"{text}";
-        }
-
-        private string EvalStyleMatch(Match match)
-        {
-            string style = match.Groups[1].Value;
-            string text = match.Groups[2].Value;
-
-            if (string.IsNullOrWhiteSpace(text))
-            {
-                return string.Empty;
-            }
-
-            switch (style)
-            {
-                case "AssociatedCard":
-                    return $"__**{text}**__";
-
-                case "Keyword":
-                case "Vocab":
-                    return $"**{text}**";
-
-                case "Parentheses":
-                    return $"*{text}*";
-
-                case "Variable":
-                default:
-                    return $"{text}";
-            }
-        }
-
-        private string EvalSpriteMatch(Match match)
-        {
-            string sprite = match.Groups[1].Value;
-
-            return Settings.SpriteEmotes.TryGetValue(sprite, out ulong emote) ? $"<:{sprite[0]}:{emote}> " : string.Empty;
-        }
-
-        private string EvalBrMatch(Match match)
-        {
-            return Environment.NewLine;
-        }
-
-        private string EvalNobrMatch(Match match)
-        {
-            string text = match.Groups[1].Value;
-
-            return $"{text}";
-        }
-
-        private string ProcessFormattedText(string text)
-        {
-            text = LinkRegex.Replace(text, EvalLinkMatch);
-            text = StyleRegex.Replace(text, EvalStyleMatch);
-            text = SpriteRegex.Replace(text, EvalSpriteMatch);
-            text = BrRegex.Replace(text, EvalBrMatch);
-            text = NobrRegex.Replace(text, EvalNobrMatch);
-
-            return text;
-        }
-
-        private string GetKeywordString(LorKeyword keyword)
-        {
-            char abbr = keyword.Key[0];
-            string emotes;
-
-            if (Settings.KeywordSprites.TryGetValue(keyword.Key, out IList<string>? keywordSprites))
-            {
-                var sb = new StringBuilder();
-                foreach (string keywordSprite in keywordSprites)
-                {
-                    if (Settings.SpriteEmotes.TryGetValue(keywordSprite, out ulong kw))
-                    {
-                        _ = sb.Append($"<:{abbr}:{kw}> ");
-                    }
-                    else
-                    {
-                        Logger.LogWarning($"{nameof(TipsySettings.KeywordSprites)} references the sprite {keywordSprite} for keyword {keyword.Key}, but this sprite wasn't found in {nameof(TipsySettings.SpriteEmotes)}. Ignoring it.");
-                    }
-                }
-
-                emotes = sb.ToString();
-            }
-            else if (Settings.SpriteEmotes.TryGetValue(keyword.Key, out ulong kw))
-            {
-                emotes = $"<:{abbr}:{kw}> ";
-            }
-            else
-            {
-                emotes = string.Empty;
-            }
-
-            return $"[**{emotes}{keyword.Name}**]";
-        }
-
-        private string GetRarityString(LorRarity rarity)
-        {
-            if (Settings.RarityIconEmotes.TryGetValue(rarity.Key, out ulong rarityEmote))
-            {
-                return $"<:{rarity.Key}:{rarityEmote}> {rarity.Name}";
-            }
-            else
-            {
-                return rarity.Name;
-            }
         }
 
         private async Task<Embed> BuildEmbed(ICard card)
@@ -215,6 +104,91 @@ namespace TipsyOwl
             _ = eb.AddField("Region", rb.ToString(), true);
 
             return eb.Build();
+        }
+
+        private string GetKeywordString(LorKeyword keyword)
+        {
+            IEnumerable<string> values = GetEmotes(keyword.Key).Append(keyword.Name);
+            string joined = string.Join(' ', values);
+            return $"[**{joined}**]";
+        }
+
+        private string GetRarityString(LorRarity rarity)
+        {
+            if (Settings.RarityIconEmotes.TryGetValue(rarity.Key, out ulong rarityEmote))
+            {
+                return $"<:{rarity.Key}:{rarityEmote}> {rarity.Name}";
+            }
+            else
+            {
+                return rarity.Name;
+            }
+        }
+
+        private string ProcessFormattedText(string text)
+        {
+            text = LinkRegex.Replace(text, EvalLinkMatch);
+            text = StyleRegex.Replace(text, EvalStyleMatch);
+            text = SpriteRegex.Replace(text, EvalSpriteMatch);
+            text = BrRegex.Replace(text, EvalBrMatch);
+            text = NobrRegex.Replace(text, EvalNobrMatch);
+
+            return text;
+        }
+
+        private string EvalLinkMatch(Match match)
+        {
+            //string link = match.Groups[1].Value;
+            string text = match.Groups[2].Value;
+
+            return $"{text}";
+        }
+
+        private string EvalStyleMatch(Match match)
+        {
+            string style = match.Groups[1].Value;
+            string text = match.Groups[2].Value;
+
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                return string.Empty;
+            }
+
+            switch (style)
+            {
+                case "AssociatedCard":
+                    return $"__**{text}**__";
+
+                case "Keyword":
+                case "Vocab":
+                    return $"**{text}**";
+
+                case "Parentheses":
+                    return $"*{text}*";
+
+                case "Variable":
+                default:
+                    return $"{text}";
+            }
+        }
+
+        private string EvalSpriteMatch(Match match)
+        {
+            string sprite = match.Groups[1].Value;
+
+            return Settings.SpriteEmotes.TryGetValue(sprite, out ulong emote) ? $"<:{sprite[0]}:{emote}> " : string.Empty;
+        }
+
+        private string EvalBrMatch(Match match)
+        {
+            return Environment.NewLine;
+        }
+
+        private string EvalNobrMatch(Match match)
+        {
+            string text = match.Groups[1].Value;
+
+            return $"{text}";
         }
     }
 }

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Bjerg;
 using Bjerg.Lor;
@@ -35,6 +36,30 @@ namespace TipsyOwl
             {
                 Logger.LogError($"The home catalog for v{card.Version} doesn't have a card with code {card.Code}. Attempting to use the provided card instead.");
                 return card;
+            }
+        }
+
+        protected IEnumerable<string> GetEmotes(string key)
+        {
+            char abbr = key[0];
+
+            if (Settings.KeywordSprites.TryGetValue(key, out IList<string>? keywordSprites))
+            {
+                foreach (string keywordSprite in keywordSprites)
+                {
+                    if (Settings.SpriteEmotes.TryGetValue(keywordSprite, out ulong kw))
+                    {
+                        yield return $"<:{abbr}:{kw}>";
+                    }
+                    else
+                    {
+                        Logger.LogWarning($"{nameof(TipsySettings.KeywordSprites)} references the sprite {keywordSprite} for keyword {key}, but this sprite wasn't found in {nameof(TipsySettings.SpriteEmotes)}. Ignoring it.");
+                    }
+                }
+            }
+            else if (Settings.SpriteEmotes.TryGetValue(key, out ulong kw))
+            {
+                yield return $"<:{abbr}:{kw}>";
             }
         }
 

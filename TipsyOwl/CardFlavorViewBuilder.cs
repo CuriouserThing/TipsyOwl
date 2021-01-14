@@ -20,30 +20,6 @@ namespace TipsyOwl
             return new MessageView(embed);
         }
 
-        private string GetFlavorCategory(ICard card, ICard homeCard)
-        {
-            if (homeCard.Supertype?.Name == "Champion")
-            {
-                return card.Supertype?.Name ?? "Champion";
-            }
-
-            if (card.Subtypes.Count > 0)
-            {
-                return string.Join(' ', card.Subtypes);
-            }
-
-            if (homeCard.Type != null)
-            {
-                return homeCard.Type.Name switch
-                {
-                    "Skill" => "Ability",
-                    _       => card.Type?.Name ?? homeCard.Type.Name,
-                };
-            }
-
-            return "Card";
-        }
-
         private async Task<Embed> BuildEmbed(ICard card)
         {
             ICard homeCard = await GetHomeCard(card);
@@ -75,6 +51,30 @@ namespace TipsyOwl
             }
 
             return eb.Build();
+        }
+
+        private string GetFlavorCategory(ICard card, ICard homeCard)
+        {
+            if (homeCard.Supertype?.Name == "Champion")
+            {
+                return card.Supertype?.Name ?? "Champion";
+            }
+
+            if (card.Subtypes.Count > 0)
+            {
+                return string.Join(' ', card.Subtypes);
+            }
+
+            if (homeCard.Type != null)
+            {
+                return homeCard.Type.Name switch
+                {
+                    "Skill" => "Ability",
+                    _       => card.Type?.Name ?? homeCard.Type.Name,
+                };
+            }
+
+            return "Card";
         }
     }
 }
