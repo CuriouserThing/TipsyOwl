@@ -45,7 +45,7 @@ namespace TipsyOwl
             }
 
             EmbedBuilder eb = new EmbedBuilder()
-                .WithTitle($"**{card.Name}**")
+                .WithTitle($"{card.Name}")
                 .WithDescription(desc);
             return eb.Build();
         }

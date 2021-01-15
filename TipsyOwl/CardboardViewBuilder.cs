@@ -58,7 +58,7 @@ namespace TipsyOwl
             }
 
             EmbedBuilder eb = new EmbedBuilder()
-                .WithTitle($"**{card.Name}**")
+                .WithTitle($"{card.Name}")
                 .WithDescription(descBuilder.ToString());
 
             if (card.GameArtPath != null)

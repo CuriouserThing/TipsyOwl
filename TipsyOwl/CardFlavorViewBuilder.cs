@@ -37,7 +37,7 @@ namespace TipsyOwl
             }
 
             EmbedBuilder eb = new EmbedBuilder()
-                .WithTitle($"**{card.Name}**")
+                .WithTitle($"{card.Name}")
                 .WithDescription(descBuilder.ToString());
 
             if (!string.IsNullOrWhiteSpace(card.ArtistName))
