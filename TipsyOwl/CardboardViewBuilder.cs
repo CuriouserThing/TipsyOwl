@@ -51,7 +51,7 @@ namespace TipsyOwl
                 _ = descBuilder.AppendLine(string.Join(" ", keywordStrings));
             }
 
-            if (card.Description != null)
+            if (!string.IsNullOrWhiteSpace(card.Description))
             {
                 string desc = ProcessFormattedText(card.Description);
                 _ = descBuilder.AppendLine(desc);

@@ -30,7 +30,7 @@ namespace TipsyOwl
             string cat = GetFlavorCategory(card, homeCard);
             descBuilder.AppendLine($"{reg} {cat}");
 
-            if (card.FlavorText != null)
+            if (!string.IsNullOrWhiteSpace(card.FlavorText))
             {
                 descBuilder.AppendLine();
                 descBuilder.AppendLine(card.FlavorText);
@@ -40,7 +40,7 @@ namespace TipsyOwl
                 .WithTitle($"**{card.Name}**")
                 .WithDescription(descBuilder.ToString());
 
-            if (card.ArtistName != null)
+            if (!string.IsNullOrWhiteSpace(card.ArtistName))
             {
                 _ = eb.AddField("Illustration", card.ArtistName);
             }
