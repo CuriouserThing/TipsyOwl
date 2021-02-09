@@ -96,7 +96,7 @@ namespace TipsyOwl
 
             var rb = new StringBuilder();
             _ = rb.Append(GetRegionString(card.Region));
-            if (card.Rarity != null && card.Rarity.Key != "None")
+            if (card.Collectible && card.Rarity != null && card.Rarity.Key != "None")
             {
                 _ = rb.Append($" {GetRarityString(card.Rarity)}");
             }
